@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login page for the Employee</title>
+    <style>
+        body{
+            height: 100vh; 
+            display:flex;
+            justify-content: center;
+            align-items: center;
+        }
+        div{
+            background-color: grey;
+            border: 4px solid black;
+            width: 300px;
+            height: 200px;
+        }
+           label{
+            margin-right: 5px;
+            
+        }
+        input{
+            border:3px solid rgb(37, 36, 36);
+        }
+        form{
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+        }
+        button{
+                background-color: blue;
+        }
+    </style>
+</head>
+
+<body>
+    <div>
+<form id="f2">
+            <label>
+                Username => 
+            </label>
+            <input name="username" type="text" required>
+            <br>
+            <label>
+                Password =>
+            </label>
+            <input name="password" type="Password">
+            <br>
+            <br>
+            <button type="submit">
+                Login
+            </button>
+        </form>
+    </div>
+    <script>
+        const form2=document.getElementById("f2");
+form2.addEventListener("submit",(e)=>
+{
+    e.preventDefault();
+    const data=new FormData(form2);
+    const obj=Object.fromEntries(data.entries());
+  fetch("http://localhost:3000/login",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json"},
+    body:JSON.stringify(obj)
+})
+.then(res => res.json())
+.then(d => {
+
+    alert(d.msg || d.err);
+    if(d.err)
+{
+    localStorage.setItem("err",d.err);
+    window.location.href="err.html"    
+}
+else
+{
+    localStorage.setItem("username",d.username);
+    localStorage.setItem("purpose",d.msg);
+    window.location.href="daashboard.html"
+}
+})
+.catch(console.error);
+})
+    </script>
+</body>
+</html>

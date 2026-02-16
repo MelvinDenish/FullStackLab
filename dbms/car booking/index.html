@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Car Booking Management</title>
+<style>
+body { font-family: Arial; padding: 20px; }
+input, select, button { margin: 5px; padding: 5px; }
+table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+th, td { border: 1px solid #333; padding: 10px; text-align: left; }
+</style>
+</head>
+<body>
+<h1>Car Booking Management System</h1>
+
+<h3>Add Car</h3>
+<input type="text" id="carModel" placeholder="Car Model">
+<input type="text" id="carPlate" placeholder="Car Plate">
+<button onclick="addCar()">Add Car</button>
+
+<h3>Book Car</h3>
+<input type="text" id="customerName" placeholder="Customer Name">
+<select id="carSelect"></select>
+<input type="number" id="days" placeholder="Days">
+<button onclick="bookCar()">Book Car</button>
+
+<h3>Cars</h3>
+<table>
+<thead><tr><th>ID</th><th>Model</th><th>Plate</th><th>Available</th></tr></thead>
+<tbody id="carList"></tbody>
+</table>
+
+<h3>Bookings</h3>
+<table>
+<thead><tr><th>ID</th><th>Customer</th><th>Car</th><th>Days</th><th>Action</th></tr></thead>
+<tbody id="bookingList"></tbody>
+</table>
+
+<script>
+const apiUrl = "http://localhost:3000";
+
+async function fetchCars() {
+    const res = await fetch(`${apiUrl}/cars`);
+    const cars = await res.json();
+    const tbody = document.getElementById("carList");
+    const select = document.getElementById("carSelect");
+    tbody.innerHTML = "";
+    select.innerHTML = "";
+    cars.forEach(c => {
+        tbody.innerHTML += `<tr><td>${c.id}</td><td>${c.model}</td><td>${c.plate}</td><td>${c.available}</td></tr>`;
+        if(c.available) select.innerHTML += `<option value="${c.id}">${c.model} (${c.plate})</option>`;
+    });
+}
+
+async function fetchBookings() {
+    const [resBookings, resCars] = await Promise.all([fetch(`${apiUrl}/bookings`), fetch(`${apiUrl}/cars`)]);
+    const bookings = await resBookings.json();
+    const cars = await resCars.json();
+    const tbody = document.getElementById("bookingList");
+    tbody.innerHTML = "";
+    bookings.forEach(b => {
+        const car = cars.find(c => c.id === b.carId);
+        tbody.innerHTML += `<tr>
+            <td>${b.id}</td>
+            <td>${b.customer}</td>
+            <td>${car ? car.model : 'N/A'}</td>
+            <td>${b.days}</td>
+            <td><button onclick="cancelBooking(${b.id})">Cancel</button></td>
+        </tr>`;
+    });
+}
+
+async function addCar() {
+    const model = document.getElementById("carModel").value;
+    const plate = document.getElementById("carPlate").value;
+    if(!model || !plate) return alert("Fill all fields!");
+    await fetch(`${apiUrl}/cars`, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({model, plate}) });
+    document.getElementById("carModel").value = "";
+    document.getElementById("carPlate").value = "";
+    fetchCars();
+}
+
+async function bookCar() {
+    const customer = document.getElementById("customerName").value;
+    const carId = parseInt(document.getElementById("carSelect").value);
+    const days = parseInt(document.getElementById("days").value);
+    if(!customer || !carId || !days) return alert("Fill all fields!");
+    await fetch(`${apiUrl}/bookings`, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({customer, carId, days}) });
+    document.getElementById("customerName").value = "";
+    document.getElementById("days").value = "";
+    fetchCars();
+    fetchBookings();
+}
+
+async function cancelBooking(id) {
+    await fetch(`${apiUrl}/bookings/${id}`, { method: "DELETE" });
+    fetchCars();
+    fetchBookings();
+}
+
+// Initial load
+fetchCars();
+fetchBookings();
+</script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DashBoard</title>
+</head>
+<body id="b">
+
+<script>
+const b = document.getElementById("b");
+
+const h1 = document.createElement("h1");
+
+h1.innerHTML = `Hello ${localStorage.getItem("username")} <br> ${localStorage.getItem("purpose")}`;
+
+b.appendChild(h1);   
+</script>
+
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin DashBoard</title>
+</head>
+<body>
+    <h2>
+        Admin Page
+    </h2>
+    <br>
+    <br>
+    <br>
+    <label>
+        choose the dept to display the Employee of the respective deptartment
+    </label>
+    <br>
+    <select name="dept" id="select">
+        <option value="finance">
+            finance
+        </option >
+        <option value="food">
+            food
+        </option>
+        <option value="clothing">
+            clothing
+        </option>
+    </select>
+    <br>
+    <br>
+    <label>
+        username to delete 
+    </label>
+    <br>
+    <input type="text" id="id_d">
+    <button id="delete" onclick="del()">
+            delete
+    </button>
+    <div id="display">
+    </div>
+    <script>
+        const s=document.getElementById("select");
+        const ip=document.getElementById("id_d");
+    function del()
+    {
+        if(!ip.value)
+            {
+                alert("please enter the username")
+                return;
+            }
+        fetch(`http://localhost:3000/delete/${ip.value}`,{
+            method:"DELETE"
+        }).then(res=>res.json()).then(d=> {if (d.err)
+                alert(`${d.err}`)
+                else{
+                    alert(`${d.msg}`);
+                    localStorage.removeItem("username");
+                }
+        }).catch(err=>console.log(err));
+    }
+        s.addEventListener("change",(e)=>
+    {
+        fetch(`http://localhost:3000/display/${s.value}`).then(res=>res.json()).then(d=>
+            console.log(d.employees)
+        ).catch(err=>{
+            console.log(err);
+            return;
+        });
+    })
+    </script>
+</body>
+</html>

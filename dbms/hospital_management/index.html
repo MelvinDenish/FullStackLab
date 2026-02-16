@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hospital Management</title>
+<style>
+body { font-family: Arial; padding: 20px; }
+input, select, button { margin: 5px; padding: 5px; }
+table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+th, td { border: 1px solid #333; padding: 10px; text-align: left; }
+</style>
+</head>
+<body>
+<h1>Hospital Management System</h1>
+
+<h3>Add Doctor</h3>
+<input type="text" id="docName" placeholder="Doctor Name" required>
+<input type="text" id="docDept" placeholder="Department" required>
+<button onclick="addDoctor()">Add Doctor</button>
+
+<h3>Add Patient</h3>
+<input type="text" id="patName" placeholder="Patient Name" required>
+<input type="number" id="patAge" placeholder="Age" required>
+<select id="doctorSelect"></select>
+<button onclick="addPatient()">Add Patient</button>
+
+<h3>Doctors</h3>
+<table>
+<thead><tr><th>ID</th><th>Name</th><th>Department</th></tr></thead>
+<tbody id="doctorList"></tbody>
+</table>
+
+<h3>Patients</h3>
+<table>
+<thead><tr><th>ID</th><th>Name</th><th>Age</th><th>Doctor</th><th>Action</th></tr></thead>
+<tbody id="patientList"></tbody>
+</table>
+
+<script>
+const apiUrl = "http://localhost:3000";
+
+async function fetchDoctors() {
+    const res = await fetch(`${apiUrl}/doctors`);
+    const doctors = await res.json();
+    const tbody = document.getElementById("doctorList");
+    const select = document.getElementById("doctorSelect");
+    tbody.innerHTML = "";
+    select.innerHTML = "";
+    doctors.forEach(doc => {
+        tbody.innerHTML += `<tr><td>${doc.id}</td><td>${doc.name}</td><td>${doc.department}</td></tr>`;
+        select.innerHTML += `<option value="${doc.id}">${doc.name} (${doc.department})</option>`;
+    });
+}
+
+async function fetchPatients() {
+    const [resPatients, resDoctors] = await Promise.all([fetch(`${apiUrl}/patients`), fetch(`${apiUrl}/doctors`)]);
+    const patients = await resPatients.json();
+    const doctors = await resDoctors.json();
+    const tbody = document.getElementById("patientList");
+    tbody.innerHTML = "";
+    patients.forEach(p => {
+        const docName = doctors.find(d => d.id === p.doctorId)?.name || "N/A";
+        tbody.innerHTML += `<tr>
+            <td>${p.id}</td>
+            <td>${p.name}</td>
+            <td>${p.age}</td>
+            <td>${docName}</td>
+            <td><button onclick="dischargePatient(${p.id})">Discharge</button></td>
+        </tr>`;
+    });
+}
+
+async function addDoctor() {
+    const name = document.getElementById("docName").value;
+    const dept = document.getElementById("docDept").value;
+    if(!name || !dept) return alert("Fill all fields!");
+    await fetch(`${apiUrl}/doctors`, { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({name, department: dept})});
+    document.getElementById("docName").value = "";
+    document.getElementById("docDept").value = "";
+    fetchDoctors();
+}
+
+async function addPatient() {
+    const name = document.getElementById("patName").value;
+    const age = parseInt(document.getElementById("patAge").value);
+    const doctorId = parseInt(document.getElementById("doctorSelect").value);
+    if(!name || !age || !doctorId) return alert("Fill all fields!");
+    await fetch(`${apiUrl}/patients`, { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({name, age, doctorId})});
+    document.getElementById("patName").value = "";
+    document.getElementById("patAge").value = "";
+    fetchPatients();
+}
+
+async function dischargePatient(id) {
+    await fetch(`${apiUrl}/patients/${id}`, { method: "DELETE" });
+    fetchPatients();
+}
+
+// Initial load
+fetchDoctors();
+fetchPatients();
+</script>
+</body>
+</html>

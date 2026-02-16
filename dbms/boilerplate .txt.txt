@@ -1,0 +1,170 @@
+const express = require("express");
+const fs = require("fs");
+const cors = require("cors");
+const bodyParser = require("body-parser");
+const app = express();
+const PORT = 3000;
+
+// --- Middleware ---
+app.use(cors());
+app.use(bodyParser.json());
+app.use(express.static("public")); // frontend folder
+
+// --- Helper functions for JSON storage ---
+const readJSON = (file) => fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, "utf-8")) : [];
+const saveJSON = (file, data) => fs.writeFileSync(file, JSON.stringify(data, null, 2));
+
+// --- Configuration: change this for each entity ---
+const ENTITY_FILE = "items.json"; // JSON file name
+// Item fields: e.g., { id, name, detail }. Add more fields as needed.
+
+// --- CRUD Routes ---
+
+// GET all items
+app.get("/items", (req, res) => {
+    const items = readJSON(ENTITY_FILE);
+    res.json(items);
+});
+
+// CREATE new item
+app.post("/items", (req, res) => {
+    const items = readJSON(ENTITY_FILE);
+    const newItem = { id: Date.now(), ...req.body }; // generate unique id
+    items.push(newItem);
+    saveJSON(ENTITY_FILE, items);
+    res.json({ message: "Item added", item: newItem });
+});
+
+// UPDATE item
+app.put("/items/:id", (req, res) => {
+    const items = readJSON(ENTITY_FILE);
+    const id = parseInt(req.params.id);
+    const index = items.findIndex(i => i.id === id);
+    if (index === -1) return res.status(404).json({ error: "Item not found" });
+    items[index] = { ...items[index], ...req.body };
+    saveJSON(ENTITY_FILE, items);
+    res.json({ message: "Item updated", item: items[index] });
+});
+
+// DELETE item
+app.delete("/items/:id", (req, res) => {
+    const items = readJSON(ENTITY_FILE);
+    const id = parseInt(req.params.id);
+    const newItems = items.filter(i => i.id !== id);
+    saveJSON(ENTITY_FILE, newItems);
+    res.json({ message: "Item deleted" });
+});
+
+// --- Start server ---
+app.listen(PORT, () => console.log(`Server running at http://localhost:${PORT}`));
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mini Management System</title>
+<style>
+body { font-family: Arial; padding: 20px; }
+input, button { margin: 5px; padding: 5px; }
+table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+th, td { border: 1px solid #333; padding: 10px; text-align: left; }
+</style>
+</head>
+<body>
+
+<h1>Mini Management System</h1>
+
+<!-- Add / Edit Item -->
+<h3>Add / Update Item</h3>
+<input type="text" id="itemName" placeholder="Name">
+<input type="text" id="itemDetail" placeholder="Detail">
+<input type="hidden" id="itemId">
+<button onclick="saveItem()">Save Item</button>
+
+<!-- Item List Table -->
+<h3>Item List</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Name</th>
+<th>Detail</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody id="itemList"></tbody>
+</table>
+
+<script>
+const apiUrl = "http://localhost:3000/items";
+
+// --- Fetch and display items ---
+async function fetchItems() {
+    const res = await fetch(apiUrl);
+    const items = await res.json();
+    const tbody = document.getElementById("itemList");
+    tbody.innerHTML = "";
+    items.forEach(item => {
+        tbody.innerHTML += `<tr>
+            <td>${item.id}</td>
+            <td>${item.name}</td>
+            <td>${item.detail}</td>
+            <td>
+                <button onclick="editItem(${item.id}, '${item.name}', '${item.detail}')">Edit</button>
+                <button onclick="deleteItem(${item.id})">Delete</button>
+            </td>
+        </tr>`;
+    });
+}
+
+// --- Populate fields for editing ---
+function editItem(id, name, detail) {
+    document.getElementById("itemId").value = id;
+    document.getElementById("itemName").value = name;
+    document.getElementById("itemDetail").value = detail;
+}
+
+// --- Save (add / update) item ---
+async function saveItem() {
+    const id = document.getElementById("itemId").value;
+    const name = document.getElementById("itemName").value;
+    const detail = document.getElementById("itemDetail").value;
+    if (!name || !detail) return alert("Fill all fields!");
+
+    if (id) {
+        // Update
+        await fetch(`${apiUrl}/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, detail })
+        });
+    } else {
+        // Add new
+        await fetch(apiUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, detail })
+        });
+    }
+
+    document.getElementById("itemId").value = "";
+    document.getElementById("itemName").value = "";
+    document.getElementById("itemDetail").value = "";
+    fetchItems();
+}
+
+// --- Delete item ---
+async function deleteItem(id) {
+    await fetch(`${apiUrl}/${id}`, { method: "DELETE" });
+    fetchItems();
+}
+
+// Initial load
+fetchItems();
+</script>
+</body>
+</html>

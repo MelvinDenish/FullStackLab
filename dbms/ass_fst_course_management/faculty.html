@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faculty DashBoard</title>
+</head>
+<body>
+    <h4>Add courses</h4>
+
+    <form id="f">
+        <label>Course ID :</label>
+        <input type="number" id="courseid" name="courseid" required>
+
+        <label>Course name :</label>
+        <input type="text" id="coursename" name="coursename" required>
+
+        <button type="submit">Add course</button>
+    </form>
+
+    <br>
+
+    <div style="width:300px;height:300px;overflow:scroll;border:2px solid grey;">
+        <table style="margin:3px;border:3px solid black;border-collapse:collapse;">
+            <thead>
+                <tr>
+                    <td>S no</td>
+                    <td>Course Id</td>
+                    <td>Course name</td>
+                    <td>Delete</td>
+                </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+        </table>
+    </div>
+    <br>
+    <select name="student" id="s">
+    </select>
+    <form id="fs">
+        
+    </form>
+<script>
+const f=document.getElementById("f");
+const tb=document.getElementById("tbody");
+const s=document.getElementById("s");
+const fs=document.getElementById("fs");
+f.addEventListener("submit",addcourse);
+fs.addEventListener("submit",updatemarks)
+function addcourse(e){
+    e.preventDefault();
+    const data=new FormData(f);
+    const courses=Object.fromEntries(data.entries());
+
+    fetch("http://localhost:3000/addCourse",{
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body:JSON.stringify(courses)
+    })
+    .then(res=>res.json())
+    .then(data=>{
+        alert(data.msg);
+        render();
+        f.reset();
+    });
+}
+function updatemarks()
+{
+    fetch("http://lcoalhost/getcourses").then(res=>res.json).then(data=>{
+            fs.innerHTML=""
+            var d=data.c;
+            d.forEach((d1)=>{
+                const l=document.createElement("label");
+                const ip=document.createElement("input");
+                l.innerText=d1.coursename;
+                
+            })
+    });
+}
+function render(){
+    tb.innerHTML="";
+    fetch("http://localhost:3000/getcourses")
+    .then(res=>res.json())
+    .then(data=>{
+            const d=data.c;
+            d.forEach((d1,i)=>{
+            const tr=document.createElement("tr");
+
+            const td0=document.createElement("td");
+            td0.innerText=i+1;
+
+            const td1=document.createElement("td");
+            td1.innerText=d1.courseid;
+
+            const td2=document.createElement("td");
+            td2.innerText=d1.coursename;
+
+            const td3=document.createElement("td");
+            td3.innerHTML=`<button onclick="del('${d1.courseid}')">Delete</button>`;
+
+            tr.append(td0,td1,td2,td3);
+            tb.appendChild(tr);
+            });
+        });
+    }
+
+function del(index){
+    fetch(`http://localhost:3000/deletecourse/${index}`)
+    .then(res=>res.json())
+    .then(data=>{
+        alert(data.msg);
+        render();
+    });
+}
+
+render();
+</script>
+</body>
+</html>

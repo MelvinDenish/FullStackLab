@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Management</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        table, th, td { border: 1px solid #333; }
+        th, td { padding: 10px; text-align: left; }
+        input { margin: 5px; padding: 5px; }
+        button { padding: 5px 10px; }
+    </style>
+</head>
+<body>
+    <h1>Library Management</h1>
+
+    <h3>Add Book</h3>
+    <input type="text" id="title" placeholder="Book Title" required>
+    <input type="text" id="author" placeholder="Author Name" required>
+    <button onclick="addBook()">Add Book</button>
+
+    <h3>Book List</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="bookList"></tbody>
+    </table>
+
+    <script>
+        const apiUrl = "http://localhost:3000/books";
+
+        async function fetchBooks() {
+            const res = await fetch(apiUrl);
+            const books = await res.json();
+            const tbody = document.getElementById("bookList");
+            tbody.innerHTML = "";
+            books.forEach(book => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${book.id}</td>
+                    <td>${book.title}</td>
+                    <td>${book.author}</td>
+                    <td><button onclick="deleteBook(${book.id})">Delete</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function addBook() {
+            const title = document.getElementById("title").value;
+            const author = document.getElementById("author").value;
+            if (!title || !author) {
+                alert("Please fill in both fields!");
+                return;
+            }
+            await fetch(apiUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ title, author })
+            });
+            document.getElementById("title").value = "";
+            document.getElementById("author").value = "";
+            fetchBooks();
+        }
+
+        async function deleteBook(id) {
+            await fetch(`${apiUrl}/${id}`, { method: "DELETE" });
+            fetchBooks();
+        }
+
+        fetchBooks(); // initial load
+    </script>
+</body>
+</html>
