@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <select name="select-dept" id="select-dept" onchange="changeDept()">
+    </select>
+    <table>
+        <thead>
+            <tr>
+                <th>
+                    Name
+                </th>
+                <th>
+                    Age
+                </th>
+                <th>
+                    Dept
+                </th>
+                <th>
+                    Salary
+                </th>
+                <th>
+                    Email
+                </th>
+                <th>
+                    Delete
+                </th>
+                <th>
+                    Update
+                </th>
+            </tr>
+        </thead>
+        <tbody id="tbd">
+
+        </tbody>
+    </table>
+</body>
+<script>
+    emps = [];
+    const changeDept = () => {
+        const dept = document.getElementById('select-dept').value;
+        let filtered = dept ? emps.filter(e => e.dept === dept) : emps;
+        const tbd = document.getElementById('tbd');
+        tbd.innerHTML = filtered.map(e =>
+            `<tr id='tr-${e.id}'>
+                <td>${e.name}</td> 
+                <td>${e.age}</td>
+                <td>${e.dept}</td>
+                <td>${e.salary}</td>
+                <td>${e.email}</td>
+                <td><button onclick='deleteEmp(${e.id})'>Delete</button></td>
+                <td><button onclick='updateEmp(${e.id})'>Update</button></td>
+            </tr>
+            `
+        ).join('')
+    }
+    const render = async () => {
+        const empss = await fetch('/api/employees');
+        emps = await empss.json();
+        const depts = [...new Set(emps.map(e => e.dept))];
+        const select = document.getElementById('select-dept');
+        select.innerHTML = `<option value=''>All</option>`
+        select.innerHTML += depts.map(e => `<option value='${e}'>${e}</option>`).join('')
+        const tbd = document.getElementById('tbd');
+        tbd.innerHTML = emps.map(e =>
+            `<tr id='tr-${e.id}'>
+                <td>${e.name}</td> 
+                <td>${e.age}</td>
+                <td>${e.dept}</td>
+                <td>${e.salary}</td>
+                <td>${e.email}</td>
+                <td><button onclick='deleteEmp(${e.id})'>Delete</button></td>
+                <td><button onclick='updateEmp(${e.id})'>Update</button></td>
+            </tr>
+            `
+        ).join('');
+    }
+
+
+    const updateEmp = (id) => {
+        const e = emps.find(e => e.id === id);
+
+        let tr = document.getElementById(`tr-${e.id}`);
+        tr.innerHTML = `
+             <td><input id='name-${e.id}' value='${e.name}'></td> 
+                <td><input id='age-${e.id}' value='${e.age}'></td>
+                <td><input id='dept-${e.id}' value='${e.dept}'></td>
+                <td><input id='salary-${e.id}' value='${e.salary}'></td>
+                <td><input id='email-${e.id}' value='${e.email}'></td>
+                <td><button onclick='save(${e.id})'>Save</button></td>
+                <td><button onclick='cancel()'>Cancel</button></td>
+        `;
+    }
+    const cancel = () => {
+        location.reload();
+    }
+    const save = async (id) => {
+        const e = emps.find(e => e.id === id);
+        const data = {
+            id,
+            name: document.getElementById(`name-${e.id}`).value,
+            age: document.getElementById(`age-${e.id}`).value,
+            dept: document.getElementById(`dept-${e.id}`).value,
+            salary: document.getElementById(`salary-${e.id}`).value,
+            email: document.getElementById(`email-${e.id}`).value,
+        }
+        const op = await fetch(`/api/employee/${e.id}`, {
+            method: 'PUT',
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+        })
+        const res = await op.json();
+        console.log(res);
+        if (res.msg) {
+            alert('saved successfully');
+            location.reload();
+        }
+        else {
+            alert('cant save');
+        }
+    }
+
+    window.onload = async () => {
+        render();
+    }
+    const deleteEmp = async (id) => {
+        const res = await fetch(`/api/employee/${id}`, {
+            method: "DELETE",
+        })
+        const resp = res.json();
+        render();
+    }
+</script>
+
+</html>

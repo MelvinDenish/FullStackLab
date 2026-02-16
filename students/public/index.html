@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Course Management</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <nav>
+                <button onclick="show('reg')" class="active-btn" id="btn-reg">Student Register</button>
+                <button onclick="show('fac')" id="btn-fac">Faculty Dashboard</button>
+            </nav>
+        </header>
+
+        <!-- Student Registration -->
+        <div id="reg" class="page active">
+            <h2>New Student Registration</h2>
+            <form onsubmit="registerStudent(event)">
+                <input name="id" placeholder="Student ID" required>
+                <input name="name" placeholder="Full Name" required>
+                <input type="password" name="password" placeholder="Password" required>
+                <input name="class" placeholder="Class/Grade" required>
+                <input name="address" placeholder="Address">
+                <select name="gender">
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                </select>
+                <input type="email" name="email" placeholder="Email ID" required>
+                <button class="primary-btn">Register</button>
+            </form>
+        </div>
+
+        <!-- Faculty Dashboard -->
+        <div id="fac" class="page">
+            <h3>Manage Courses</h3>
+            <form onsubmit="addCourse(event)">
+                <input name="name" placeholder="Course Name" required>
+                <input name="code" placeholder="Course Code" required>
+                <input type="number" name="credits" placeholder="Credits" required>
+                <button class="primary-btn">Add Course</button>
+            </form>
+
+            <h4>Existing Courses:</h4>
+            <div id="courseList"></div>
+
+            <hr>
+
+            <h3>Update Marks</h3>
+            <select id="studentSelect" onchange="resetMarks()">
+                <option value="">Select Student</option>
+            </select>
+            <button onclick="loadMarks()" class="primary-btn" style="background:#3498db; margin-top:5px;">Load
+                Marks</button>
+
+            <div id="marksArea" style="margin-top: 20px;"></div>
+            <div id="total">Total Marks: 0</div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+
+</html>
