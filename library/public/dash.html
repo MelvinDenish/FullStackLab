@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body onload="load1()">
+    <Table>
+        <tr><th>bname</th><th>bid</th><th>author</th></tr>
+        <tr id="table"></tr>
+    </Table>
+    my cart books
+    <div id="mycart" style="border: 2px solid red ;height: 100px;width: 100px;">
+        
+    </div>
+    <script>
+        function borrow(bid){
+             fetch('/borrow',{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({bid:bid,user:localStorage.getItem("user")})}).then(res=>res.json()).then(data=>{
+                alert(data.message);
+            })
+
+        }
+        function load1(){
+            console.log("load");
+        const table=document.getElementById("table");
+        fetch('/allbook',{method:"POST"}).then(res=>res.json()).then(data=>{
+                console.log(data);
+            data.forEach(book => {
+                table.innerHTML=`<td>${book.bname}</td><td>${book.bid}</td><td>${book.author}</td><td>${book.nbk}</td><td><button onclick="borrow(${book.bid})">borrow </button></td>`
+                    
+                });
+            })
+
+            //  fetch('/cart',{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(localStorage.getItem("user"))}).then(res=>res.json()).then(data=>{
+            //      let cart=document.getElementById("mycart");
+            //      cart.innerHTML=`<p>borrowed :${data.borrows}</p><p>return :${data.returns}</p>`
+            //  })
+            
+        
+
+        
+    
+    }
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    admin page
+    <form action="" id="addbook">
+        <input type="text" name="bname" id="bname">
+        <input type="number" name="bid" id="bid">
+        <input type="text" name="author" id="author">
+        <input type="number" name="nbk" id="nbk">
+        <button type="submit">addbook
+        </button>
+        <button onclick="update1()" type="button">update
+        </button>
+    </form>
+    <script>
+        document.getElementById("addbook").addEventListener('submit',(e)=>{
+
+            e.preventDefault();
+            console.log(e.target);
+            const fd=new FormData(e.target);
+            const data=Object.fromEntries(fd);
+            fetch('/addbook',{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)}).then(res=>res.json()).then(data=>{
+                alert(data.message);
+            })
+            
+        });
+        function update1(){
+            let data={bname:bname.value,bid:bid.value,author:author.value};
+            console.log(data);
+            
+            fetch('/update',{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)}).then(res=>res.json()).then(data=>{
+                alert(data.message);
+            })
+            
+        }
+       
+
+    </script>
+</body>
+</html>
